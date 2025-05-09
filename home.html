@@ -84,25 +84,16 @@
   <div class="container">
     <div id="gpsStatus" class="disconnected">GPS Status: Connecting to ESP32...</div>
     
-    <h2>Manage Blind People</h2>
-    <!-- Button to add a new blind person -->
-    <button id="addBlindPersonButton">Add Blind Person</button>
-
-    <h3>Your Monitored Blind People</h3>
-    <div id="blindPeopleList">
-      <!-- Blind people cards will be inserted here dynamically -->
-    </div>
-
-    <h3>Blind Person's Location</h3>
-    <!-- Mapbox Map Container -->
-    <div class="map-container" id="map" style="width: 100%; height: 500px;"></div>
-
-    <h3>Current GPS Coordinates</h3>
+    <h2>Current Location</h2>
     <div id="coordinatesDisplay">
       <p>Latitude: <span id="latDisplay">Loading...</span></p>
       <p>Longitude: <span id="lngDisplay">Loading...</span></p>
       <p>Last Updated: <span id="lastUpdated">Never</span></p>
     </div>
+
+    <h3>Blind Person's Location</h3>
+    <!-- Mapbox Map Container -->
+    <div id="map" style="width: 100%; height: 500px;"></div>
 
     <h3>Set Destination</h3>
     <p>Click on the map to set a destination for the blind person. The system will guide the blind person.</p>
@@ -186,8 +177,6 @@
                 zoom: 15
               });
             }
-
-            updateSelectedBlindPerson();
           }
         })
         .catch(error => {
@@ -232,55 +221,6 @@
       
       sendTargetToESP32(lat, lng);
     });
-
-    document.getElementById('addBlindPersonButton').addEventListener('click', function() {
-      const blindName = prompt("Enter the blind person's name:");
-      if (blindName) {
-        const blindPerson = { 
-          name: blindName, 
-          location: { ...currentLocation }, // Use current GPS location
-          selected: false
-        };
-        let blindPeople = JSON.parse(localStorage.getItem('blindPeople')) || [];
-        blindPeople.push(blindPerson);
-        localStorage.setItem('blindPeople', JSON.stringify(blindPeople));
-        alert('Blind person added!');
-        renderBlindPeople(); // Re-render the list of blind people
-      }
-    });
-
-    function renderBlindPeople() {
-      const blindPeopleList = document.getElementById('blindPeopleList');
-      blindPeopleList.innerHTML = '';
-      let blindPeople = JSON.parse(localStorage.getItem('blindPeople')) || [];
-
-      if (blindPeople.length === 0) {
-        blindPeopleList.innerHTML = '<p>No blind people added yet.</p>';
-        return;
-      }
-
-      blindPeople.forEach((blind, index) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<strong>${blind.name}</strong><br>Location: Lat ${blind.location.lat.toFixed(6)}, Lng ${blind.location.lng.toFixed(6)}`;
-        
-        const selectButton = document.createElement('button');
-        selectButton.textContent = blind.selected ? 'Selected' : 'Select';
-        selectButton.style.backgroundColor = blind.selected ? '#2196F3' : '#4CAF50';
-        selectButton.addEventListener('click', function() {
-          let blindPeople = JSON.parse(localStorage.getItem('blindPeople')) || [];
-          blindPeople.forEach(p => p.selected = false);
-          
-          blindPeople[index].selected = true;
-          localStorage.setItem('blindPeople', JSON.stringify(blindPeople));
-          
-          renderBlindPeople(); // Re-render the list
-        });
-
-        card.appendChild(selectButton);
-        blindPeopleList.appendChild(card);
-      });
-    }
 
     document.addEventListener('DOMContentLoaded', function() {
       initMap();
