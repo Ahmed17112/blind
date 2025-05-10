@@ -37,13 +37,6 @@
     button:hover {
       background-color: #45a049;
     }
-    .card {
-      background-color: white;
-      border-radius: 5px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
     .map-container {
       margin: 20px 0;
       border-radius: 5px;
@@ -71,9 +64,49 @@
       color: #721c24;
     }
   </style>
+
   <!-- Mapbox CSS -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
+
+  <!-- Firebase App & Database (ES Modules) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+
+    // Your Firebase config (from the Console)
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0el_acgTw3ez6mlIOX6KRhs9IqaOY9SA",
+      authDomain: "blind-assist-c74d3.firebaseapp.com",
+      databaseURL: "https://blind-assist-c74d3-default-rtdb.firebaseio.com",
+      projectId: "blind-assist-c74d3",
+      storageBucket: "blind-assist-c74d3.firebasestorage.app",
+      messagingSenderId: "804816924364",
+      appId: "1:804816924364:web:c95b96b2d5e0d7fecddc69"
+    };
+
+    // Initialize Firebase & get a Database reference
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Write destination into Realtime Database on button click
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('sendTargetButton')
+        .addEventListener('click', async () => {
+          const lat = parseFloat(document.getElementById('destLatDisplay').textContent);
+          const lng = parseFloat(document.getElementById('destLngDisplay').textContent);
+          if (isNaN(lat) || isNaN(lng)) {
+            return alert('Please click on the map first to set a destination.');
+          }
+          try {
+            await set(ref(db, 'blindAssist/destination'), { lat, lng });
+            alert('Destination saved!');
+          } catch (e) {
+            alert('Save failed: ' + e);
+          }
+        });
+    });
+  </script>
 </head>
 <body>
   <header>
@@ -106,7 +139,7 @@
 
   <script>
     // 1) CONFIGURATION
-    const ESP32_IP = "192.168.4.1";  
+    const ESP32_IP = "192.168.4.1";
     const ESP32_GPS_ENDPOINT = `http://${ESP32_IP}/`;
 
     mapboxgl.accessToken = 'pk.eyJ1IjoiYWhtZWQxNzE3IiwiYSI6ImNtOXEwOW81ajFnNGwybnF1aG4zcjU5OWEifQ.upl_DmMfS1tHBCx-3IBcnw';
@@ -127,11 +160,8 @@
         .setLngLat([currentLocation.lng, currentLocation.lat])
         .addTo(map);
 
-      destinationMarker = new mapboxgl.Marker({ color: "#FF0000" })
-        .addTo(map);
-      destinationMarker.remove();
+      destinationMarker = new mapboxgl.Marker({ color: "#FF0000" }).remove();
 
-      // click → set destination
       map.on("click", e => {
         const { lat, lng } = e.lngLat;
         document.getElementById("destLatDisplay").textContent = lat.toFixed(6);
@@ -157,11 +187,8 @@
           return r.json();
         })
         .then(data => {
-          document.getElementById("gpsStatus")
-            .className = "connected";
-          document.getElementById("gpsStatus")
-            .textContent = "GPS Status: Connected";
-
+          document.getElementById("gpsStatus").className = "connected";
+          document.getElementById("gpsStatus").textContent = "GPS Status: Connected";
           if (data.latitude && data.longitude) {
             currentLocation.lat = parseFloat(data.latitude);
             currentLocation.lng = parseFloat(data.longitude);
@@ -169,11 +196,8 @@
           }
         })
         .catch(err => {
-          console.error("GPS fetch error:", err);
-          document.getElementById("gpsStatus")
-            .className = "disconnected";
-          document.getElementById("gpsStatus")
-            .textContent = "GPS Status: Disconnected – Check ESP32";
+          document.getElementById("gpsStatus").className = "disconnected";
+          document.getElementById("gpsStatus").textContent = "GPS Status: Disconnected – Check ESP32";
         })
         .finally(() => setTimeout(fetchGPSData, 2000));
     }
@@ -189,23 +213,7 @@
       }
     }
 
-    // 6) SEND TARGET TO ESP32
-    document.getElementById('sendTargetButton').addEventListener('click', () => {
-      const lat = parseFloat(document.getElementById('destLatDisplay').textContent);
-      const lng = parseFloat(document.getElementById('destLngDisplay').textContent);
-      if (isNaN(lat) || isNaN(lng)) {
-        return alert('Please click on the map first to set a destination.');
-      }
-      fetch(`http://${ESP32_IP}/target?lat=${lat}&lng=${lng}`)
-        .then(r => {
-          if (!r.ok) throw new Error(r.statusText);
-          return r.text();
-        })
-        .then(_ => alert('Target sent!'))
-        .catch(_ => alert('Failed to send target. Check ESP32.'));
-    });
-
-    // 7) BOOTSTRAP
+    // 6) BOOTSTRAP
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
       readURLParams();
