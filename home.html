@@ -76,14 +76,15 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
 </head>
 <body>
-
   <header>
     <h1>Blind Assist: Smart Mobility and Navigation Device</h1>
   </header>
 
   <div class="container">
-    <div id="gpsStatus" class="disconnected">GPS Status: Connecting to ESP32...</div>
-    
+    <div id="gpsStatus" class="disconnected">
+      GPS Status: Connecting to ESP32...
+    </div>
+
     <h2>Current Location</h2>
     <div id="coordinatesDisplay">
       <p>Latitude: <span id="latDisplay">Loading...</span></p>
@@ -92,11 +93,10 @@
     </div>
 
     <h3>Blind Person's Location</h3>
-    <!-- Mapbox Map Container -->
-    <div id="map" style="width: 100%; height: 500px;"></div>
+    <div id="map" style="width:100%;height:500px"></div>
 
     <h3>Set Destination</h3>
-    <p>Click on the map to set a destination for the blind person. The system will guide the blind person.</p>
+    <p>Click on the map to set a destination for the blind person.</p>
     <div id="destinationCoordinates">
       <p>Destination Latitude: <span id="destLatDisplay">N/A</span></p>
       <p>Destination Longitude: <span id="destLngDisplay">N/A</span></p>
@@ -105,20 +105,17 @@
   </div>
 
   <script>
-    // ESP32 configuration
-    const ESP32_IP = "192.168.4.1";  // Replace with your ESP32 IP address
+    // 1) CONFIGURATION
+    const ESP32_IP = "192.168.4.1";  
     const ESP32_GPS_ENDPOINT = `http://${ESP32_IP}/`;
 
-    let map;
-    let currentMarker;
-    let destinationMarker;
-    let currentLocation = { lat: 25.3884, lng: 49.5881 };  // Default location (Al-Hofuf, Al-Ahsa)
-    let gpsConnected = false;
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWhtZWQxNzE3IiwiYSI6ImNtOXEwOW81ajFnNGwybnF1aG4zcjU5OWEifQ.upl_DmMfS1tHBCx-3IBcnw';
 
-    // Initialize the Mapbox map
+    let map, currentMarker, destinationMarker;
+    let currentLocation = { lat: 25.3884, lng: 49.5881 };
+
+    // 2) CREATE MAP & MARKERS
     function initMap() {
-      mapboxgl.accessToken = 'pk.eyJ1IjoiYWhtZWQxNzE3IiwiYSI6ImNtOXEwOW81ajFnNGwybnF1aG4zcjU5OWEifQ.upl_DmMfS1tHBCx-3IBcnw';
-
       map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11',
@@ -132,100 +129,88 @@
 
       destinationMarker = new mapboxgl.Marker({ color: "#FF0000" })
         .addTo(map);
-      destinationMarker.remove(); // Hide it initially
+      destinationMarker.remove();
 
-      map.on("click", function (event) {
-        const destination = event.lngLat;
-        document.getElementById("destLatDisplay").textContent = destination.lat.toFixed(6);
-        document.getElementById("destLngDisplay").textContent = destination.lng.toFixed(6);
-
-        destinationMarker.setLngLat(destination).addTo(map);
+      // click → set destination
+      map.on("click", e => {
+        const { lat, lng } = e.lngLat;
+        document.getElementById("destLatDisplay").textContent = lat.toFixed(6);
+        document.getElementById("destLngDisplay").textContent = lng.toFixed(6);
+        destinationMarker.setLngLat([lng, lat]).addTo(map);
       });
-
-      fetchGPSData();
     }
 
-    // Function to fetch GPS data from ESP32
+    // 3) UPDATE MAP + DISPLAY
+    function updateMap() {
+      currentMarker.setLngLat([currentLocation.lng, currentLocation.lat]);
+      map.flyTo({ center: [currentLocation.lng, currentLocation.lat], zoom: 15 });
+      document.getElementById("latDisplay").textContent = currentLocation.lat.toFixed(6);
+      document.getElementById("lngDisplay").textContent = currentLocation.lng.toFixed(6);
+      document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
+    }
+
+    // 4) POLL ESP32 FOR GPS JSON
     function fetchGPSData() {
       fetch(ESP32_GPS_ENDPOINT)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
+        .then(r => {
+          if (!r.ok) throw new Error(r.statusText);
+          return r.json();
         })
         .then(data => {
-          gpsConnected = true;
-          document.getElementById("gpsStatus").className = "connected";
-          document.getElementById("gpsStatus").textContent = "GPS Status: Connected";
+          document.getElementById("gpsStatus")
+            .className = "connected";
+          document.getElementById("gpsStatus")
+            .textContent = "GPS Status: Connected";
 
-          if (data && data.latitude && data.longitude) {
-            currentLocation = {
-              lat: parseFloat(data.latitude),
-              lng: parseFloat(data.longitude)
-            };
-
-            document.getElementById("latDisplay").textContent = currentLocation.lat.toFixed(6);
-            document.getElementById("lngDisplay").textContent = currentLocation.lng.toFixed(6);
-            document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
-
-            currentMarker.setLngLat([currentLocation.lng, currentLocation.lat]);
-
-            if (map && !map.isMoving()) {
-              map.flyTo({
-                center: [currentLocation.lng, currentLocation.lat],
-                zoom: 15
-              });
-            }
+          if (data.latitude && data.longitude) {
+            currentLocation.lat = parseFloat(data.latitude);
+            currentLocation.lng = parseFloat(data.longitude);
+            updateMap();
           }
         })
-        .catch(error => {
-          console.error("Error fetching GPS data:", error);
-          gpsConnected = false;
-          document.getElementById("gpsStatus").className = "disconnected";
-          document.getElementById("gpsStatus").textContent = "GPS Status: Disconnected - Check ESP32";
+        .catch(err => {
+          console.error("GPS fetch error:", err);
+          document.getElementById("gpsStatus")
+            .className = "disconnected";
+          document.getElementById("gpsStatus")
+            .textContent = "GPS Status: Disconnected – Check ESP32";
         })
-        .finally(() => {
-          setTimeout(fetchGPSData, 2000);  // Fetch GPS data every 2 seconds
-        });
+        .finally(() => setTimeout(fetchGPSData, 2000));
     }
 
-    function sendTargetToESP32(lat, lng) {
-      const targetUrl = `http://${ESP32_IP}/target?lat=${lat}&lng=${lng}`;
-      
-      fetch(targetUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.text();
-        })
-        .then(data => {
-          alert("Target coordinates sent successfully!");
-          console.log("Target sent to ESP32:", data);
-        })
-        .catch(error => {
-          alert("Failed to send target coordinates. Check ESP32 connection.");
-          console.error("Error sending target to ESP32:", error);
-        });
+    // 5) READ URL PARAMS ON LOAD
+    function readURLParams() {
+      const p = new URLSearchParams(window.location.search);
+      const lat = parseFloat(p.get('lat'));
+      const lon = parseFloat(p.get('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) {
+        currentLocation = { lat, lng: lon };
+        updateMap();
+      }
     }
 
-    document.getElementById('sendTargetButton').addEventListener('click', function() {
+    // 6) SEND TARGET TO ESP32
+    document.getElementById('sendTargetButton').addEventListener('click', () => {
       const lat = parseFloat(document.getElementById('destLatDisplay').textContent);
       const lng = parseFloat(document.getElementById('destLngDisplay').textContent);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        alert('Please set a destination by clicking on the map first.');
-        return;
+      if (isNaN(lat) || isNaN(lng)) {
+        return alert('Please click on the map first to set a destination.');
       }
-      
-      sendTargetToESP32(lat, lng);
+      fetch(`http://${ESP32_IP}/target?lat=${lat}&lng=${lng}`)
+        .then(r => {
+          if (!r.ok) throw new Error(r.statusText);
+          return r.text();
+        })
+        .then(_ => alert('Target sent!'))
+        .catch(_ => alert('Failed to send target. Check ESP32.'));
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
+    // 7) BOOTSTRAP
+    document.addEventListener('DOMContentLoaded', () => {
       initMap();
+      readURLParams();
+      fetchGPSData();
     });
   </script>
-
 </body>
 </html>
