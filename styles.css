@@ -174,4 +174,57 @@ nav a:hover {
   nav {
     flex-direction: column;
   }
+
+ /***** BEGIN ADD v2 (تصميم جديد) *****/
+.dashboard{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin:1rem 0;
+}
+.card{
+  flex:1 1 260px;              /* يكبُر ويصغُر */
+  border:1px solid #d0d0d0;
+  border-radius:10px;
+  background:#fff;
+  padding:1rem 1.25rem;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
+.card h3{margin:.25rem 0 1rem;font-size:1.05rem}
+
+/*— عداد البطارية ملوَّن —*/
+.batteryBar{
+  width:100%;height:28px;
+  appearance:none;    /* يزيل المظهر الافتراضي */
+  border:none;border-radius:6px;overflow:hidden;
+  background:#eee;
+  position:relative;
+}
+.batteryBar::-webkit-progress-bar{background:#eee}
+.batteryBar::-webkit-progress-value{
+  background:linear-gradient(90deg,#4caf50,#8bc34a);
+  transition:width .4s ease;
+}
+.batteryText{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:bold;font-size:.9rem;color:#fff;text-shadow:0 0 2px #0006;
+}
+
+/* ≤ 30% برتقالي و ≤ 10% أحمر */
+.battery-low  .batteryBar::-webkit-progress-value{background:#e53935}
+.battery-mid  .batteryBar::-webkit-progress-value{background:#ffb300}
+
+/*— قائمة الإشعارات —*/
+#notifList li{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.45rem 0;border-bottom:1px dashed #ddd;
+  font-size:.88rem;
+}
+#notifList li::before{
+  content:"🔔";                /* أيقونة جرس */
+  font-size:1rem;
+}
+/***** END ADD v2 *****/
+
 }
