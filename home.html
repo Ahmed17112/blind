@@ -7,6 +7,47 @@
 
   <!-------------------- الأصل -------------------->
   <style>
+    /*  ── NEW DESIGN ──  بطاقات لوحة المعلومات  */
+.dashboard{
+  display:flex;flex-wrap:wrap;gap:1rem;margin:1.2rem 0;
+}
+.card{
+  flex:1 1 300px;
+  background:#fff;
+  border-radius:12px;
+  padding:1.2rem 1.4rem;
+  box-shadow:0 3px 8px rgba(0,0,0,.07);
+}
+.card h3{margin:.2rem 0 1rem;font-size:1.05rem}
+
+/* ــــــــــــ البطارية ـــــــــــــ */
+#batteryWrapper{
+  position:relative;width:100%;height:34px;background:#e9ecef;border-radius:8px;overflow:hidden;
+}
+#batteryFill{
+  position:absolute;inset:0;width:0;height:100%;background:linear-gradient(90deg,#4caf50,#8bc34a);
+  transition:width .4s ease;
+}
+#batteryPercent{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.9rem;color:#fff;text-shadow:0 0 2px #0008;
+}
+.bat-mid   #batteryFill{background:linear-gradient(90deg,#ff9800,#ffb300)}
+.bat-low   #batteryFill{background:linear-gradient(90deg,#e53935,#ff5252)}
+
+/* ــــــــــــ الإشعارات ـــــــــــــ */
+#notifList{
+  max-height:260px;overflow-y:auto;padding:0;margin:0;list-style:none
+}
+#notifList li{
+  display:flex;gap:.6rem;align-items:center;
+  padding:.55rem 0;border-bottom:1px dashed #ddd;font-size:.9rem;
+}
+#notifList li:last-child{border-bottom:none}
+#notifList li .icon{font-size:1.1rem}
+#notifList li.lowBat   .icon{color:#e53935}
+#notifList li.destSave .icon{color:#4caf50}
+
     body{font-family:Arial,sans-serif;line-height:1.6;margin:0;padding:0;background:#f4f4f4}
     header{background:#35424a;color:#fff;padding:1rem;text-align:center}
     .container{width:90%;max-width:1200px;margin:0 auto;padding:1rem}
