@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifications</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:1rem;background:#fafafa}
+    h2{margin-top:0}
+    ul{list-style:none;margin:0;padding:0}
+    li{padding:.4rem 0;border-bottom:1px dashed #ccc}
+  </style>
+</head>
+<body>
+  <h2>Notifications Log</h2>
+  <ul id="list"></ul>
+
+  <script>
+    const data=JSON.parse(localStorage.getItem('notifications')||'[]');
+    const ul=document.getElementById('list');
+    data.forEach(n=>{
+      const li=document.createElement('li');
+      li.textContent=`[${new Date(n.time).toLocaleString()}] ${n.message}`;
+      ul.appendChild(li);
+    });
+  </script>
+</body>
+</html>
