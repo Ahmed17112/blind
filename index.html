@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login - Blind Assist</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script type="module" src="js/app.js"></script>
+  <title>Login – Blind Assist</title>
 
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- other shared modules (Battery, Notifications, etc.) -->
+  <script type="module" src="js/app.js"></script>
 </head>
 <body>
 
@@ -16,21 +18,60 @@
 
   <div class="container">
     <h2>Login</h2>
-    <div class="form-group">
-      <input type="email" id="loginEmail" placeholder="Email" />
-      <label for="loginEmail">Email</label>
-    </div>
-    <div class="form-group">
-      <input type="password" id="loginPassword" placeholder="Password" />
-      <label for="loginPassword">Password</label>
-    </div>
-    <button id="loginButton">Login</button>
-    <p>
-      <a href="register.html">Sign Up</a> | <a href="forgot_password.html">Forgot Password?</a>
-    </p>
-    <p id="loginError" style="color:red; display:none;"></p> <!-- Hidden by default -->
+
+    <!-- real form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <label for="loginEmail">Email</label>
+      </div>
+
+      <div class="form-group">
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <label for="loginPassword">Password</label>
+      </div>
+
+      <button type="submit">Login</button>
+      <p>
+        <a href="register.html">Sign Up</a> |
+        <a href="forgot_password.html">Forgot Password?</a>
+      </p>
+      <p id="loginError" style="color:red; display:none;"></p>
+    </form>
   </div>
 
-  <script src="app.js"></script>
+  <!-- minimal inline module that does the redirect -->
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', () => {
+      const form     = document.getElementById('loginForm');
+      const emailInp = document.getElementById('loginEmail');
+      const passInp  = document.getElementById('loginPassword');
+      const errBox   = document.getElementById('loginError');
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();               // stop default reload
+
+        const email    = emailInp.value.trim();
+        const password = passInp.value.trim();
+        errBox.style.display = 'none';
+
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user  = users.find(u => u.email === email && u.password === password);
+
+        if (!user) {
+          errBox.textContent = 'Invalid credentials, please try again.';
+          errBox.style.display = 'block';
+          return;
+        }
+
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        /* optional: show a notification stored by app.js */
+        window.saveNotif?.('Logged in successfully');
+
+        // adjust path if home.html lives in a different folder
+        window.location.href = './home.html';
+      });
+    });
+  </script>
 </body>
 </html>
