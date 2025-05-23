@@ -4,95 +4,183 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Home - Blind Assist</title>
+
+  <!-- Main JS (module) – contains Battery, Notifications, Auth, etc. -->
   <script type="module" src="js/app.js"></script>
-
-
-  <!-- ========== CSS الأصلي + التحسينات ========== -->
-  <style>
-    /* ——— أصلي ——— */
-    body{font-family:Arial,sans-serif;line-height:1.6;margin:0;padding:0;background:#f4f4f4}
-    header{background:#35424a;color:#fff;padding:1rem;text-align:center}
-    .container{width:90%;max-width:1200px;margin:0 auto;padding:1rem}
-    button{background:#4CAF50;color:#fff;border:none;padding:10px 15px;margin:10px 0;border-radius:4px;cursor:pointer;font-size:16px}
-    button:hover{background:#45a049}
-    .map-container{margin:20px 0;border-radius:5px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-    #coordinatesDisplay{background:#e9ecef;padding:10px;border-radius:5px;margin:15px 0}
-    #gpsStatus{padding:10px;border-radius:5px;margin:15px 0;font-weight:bold}
-    .connected{background:#d4edda;color:#155724}
-    .disconnected{background:#f8d7da;color:#721c24}
-
-    /* ========== BEGIN ADD (التصميم الجديد) ========== */
-    .dashboard{display:flex;flex-wrap:wrap;gap:1rem;margin:1.2rem 0}
-    .card{flex:1 1 300px;background:#fff;border-radius:12px;padding:1.2rem 1.4rem;
-          box-shadow:0 3px 8px rgba(0,0,0,.07)}
-    .card h3{margin:.2rem 0 1rem;font-size:1.05rem}
-
-    /* البطارية */
-    #batteryWrapper{position:relative;width:100%;height:34px;background:#e9ecef;
-                    border-radius:8px;overflow:hidden}
-    #batteryFill{position:absolute;inset:0;width:0;height:100%;
-                 background:linear-gradient(90deg,#4caf50,#8bc34a);transition:width .4s}
-    #batteryPercent{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-                    font-weight:700;font-size:.9rem;color:#fff;text-shadow:0 0 2px #0008}
-    .bat-mid #batteryFill{background:linear-gradient(90deg,#ff9800,#ffb300)}
-    .bat-low #batteryFill{background:linear-gradient(90deg,#e53935,#ff5252)}
-
-    /* الإشعارات */
-    #notifList{max-height:260px;overflow-y:auto;padding:0;margin:0;list-style:none}
-    #notifList li{display:flex;gap:.6rem;align-items:center;padding:.55rem 0;
-                 border-bottom:1px dashed #ddd;font-size:.9rem}
-    #notifList li:last-child{border-bottom:none}
-    #notifList li .icon{font-size:1.05rem}
-    #notifList li.lowBat .icon{color:#e53935}
-    #notifList li.destSave .icon{color:#4caf50}
-    /* ========== END ADD ========== */
-  </style>
 
   <!-- Mapbox -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
 
-  <!-- Firebase (كودك كما هو) -->
+  <!-- Minimal CSS (original + dashboard) -->
+  <style>
+    /* Core layout */
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      line-height:1.6;
+      margin:0;
+      background:#f4f4f4;
+    }
+    header{
+      background:#35424a;
+      color:#fff;
+      padding:1rem;
+      text-align:center;
+    }
+    .container{
+      width:90%;
+      max-width:1200px;
+      margin:0 auto;
+      padding:1rem;
+    }
+    button{
+      background:#4caf50;
+      color:#fff;
+      border:none;
+      padding:10px 15px;
+      margin:10px 0;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:16px;
+    }
+    button:hover{ background:#45a049; }
+
+    /* Status badges */
+    #gpsStatus{
+      padding:10px;
+      border-radius:5px;
+      margin:15px 0;
+      font-weight:bold;
+    }
+    .connected   { background:#d4edda; color:#155724; }
+    .disconnected{ background:#f8d7da; color:#721c24; }
+
+    /* Dashboard */
+    .dashboard{
+      display:flex;
+      flex-wrap:wrap;
+      gap:1rem;
+      margin:1.2rem 0;
+    }
+    .card{
+      flex:1 1 300px;
+      background:#fff;
+      border-radius:12px;
+      padding:1.2rem 1.4rem;
+      box-shadow:0 3px 8px rgba(0,0,0,.07);
+    }
+    .card h3{ margin:.2rem 0 1rem; font-size:1.05rem; }
+
+    /* Battery bar */
+    #batteryWrapper{
+      position:relative;
+      width:100%;
+      height:34px;
+      background:#e9ecef;
+      border-radius:8px;
+      overflow:hidden;
+    }
+    #batteryFill{
+      position:absolute;
+      inset:0;
+      width:0;
+      height:100%;
+      background:linear-gradient(90deg,#4caf50,#8bc34a);
+      transition:width .4s;
+    }
+    #batteryPercent{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-size:.9rem;
+      color:#fff;
+      text-shadow:0 0 2px #0008;
+    }
+    .bat-mid #batteryFill{ background:linear-gradient(90deg,#ff9800,#ffb300); }
+    .bat-low #batteryFill{ background:linear-gradient(90deg,#e53935,#ff5252); }
+
+    /* Notifications list */
+    #notifList{
+      max-height:260px;
+      overflow-y:auto;
+      padding:0;
+      margin:0;
+      list-style:none;
+    }
+    #notifList li{
+      display:flex;
+      gap:.6rem;
+      align-items:center;
+      padding:.55rem 0;
+      border-bottom:1px dashed #ddd;
+      font-size:.9rem;
+    }
+    #notifList li:last-child{ border-bottom:none; }
+    #notifList li .icon{ font-size:1.05rem; }
+    #notifList li.lowBat  .icon{ color:#e53935; }
+    #notifList li.destSave.icon{ color:#4caf50; }
+  </style>
+
+  <!-- Firebase (save destination) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
 
-    const firebaseConfig={apiKey:"AIzaSyC0el_acgTw3ez6mlIOX6KRhs9IqaOY9SA",authDomain:"blind-assist-c74d3.firebaseapp.com",databaseURL:"https://blind-assist-c74d3-default-rtdb.firebaseio.com",projectId:"blind-assist-c74d3",storageBucket:"blind-assist-c74d3.firebasestorage.app",messagingSenderId:"804816924364",appId:"1:804816924364:web:c95b96b2d5e0d7fecddc69"};
-    const app=initializeApp(firebaseConfig);const db=getDatabase(app);
+    const firebaseConfig = {
+      apiKey:            "AIzaSyC0el_acgTw3ez6mlIOX6KRhs9IqaOY9SA",
+      authDomain:        "blind-assist-c74d3.firebaseapp.com",
+      databaseURL:       "https://blind-assist-c74d3-default-rtdb.firebaseio.com",
+      projectId:         "blind-assist-c74d3",
+      storageBucket:     "blind-assist-c74d3.firebasestorage.app",
+      messagingSenderId: "804816924364",
+      appId:             "1:804816924364:web:c95b96b2d5e0d7fecddc69"
+    };
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      sendTargetButton.addEventListener('click',async()=>{
-        const lat=parseFloat(destLatDisplay.textContent),
-              lng=parseFloat(destLngDisplay.textContent);
-        if(isNaN(lat)||isNaN(lng)) return alert('Click on the map first.');
-        try{
-          await set(ref(db,'blindAssist/destination'),{lat,lng});
-          saveNotif('Destination saved!','destSave');
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      sendTargetButton.addEventListener('click', async () => {
+        const lat = parseFloat(destLatDisplay.textContent);
+        const lng = parseFloat(destLngDisplay.textContent);
+        if (isNaN(lat) || isNaN(lng)) {
+          alert('Click on the map first.');
+          return;
+        }
+        try {
+          await set(ref(db, 'blindAssist/destination'), { lat, lng });
+          window.saveNotif('Destination saved!', 'destSave');
           alert('Destination saved!');
-        }catch(e){alert('Save failed: '+e);}
+        } catch (e) {
+          alert('Save failed: ' + e);
+        }
       });
     });
   </script>
 </head>
 
 <body>
-  <header><h1>Blind Assist: Smart Mobility and Navigation Device</h1></header>
+  <header>
+    <h1>Blind Assist: Smart Mobility & Navigation Device</h1>
+  </header>
 
   <div class="container">
 
-    <div id="gpsStatus" class="disconnected">GPS Status: Connecting to ESP32...</div>
+    <div id="gpsStatus" class="disconnected">GPS Status: Connecting to ESP32…</div>
 
     <h2>Current Location</h2>
     <div id="coordinatesDisplay">
-      <p>Latitude:  <span id="latDisplay">Loading...</span></p>
-      <p>Longitude: <span id="lngDisplay">Loading...</span></p>
+      <p>Latitude:  <span id="latDisplay">Loading…</span></p>
+      <p>Longitude: <span id="lngDisplay">Loading…</span></p>
       <p>Last Updated: <span id="lastUpdated">Never</span></p>
     </div>
 
-    <!-- ========== BEGIN ADD (Dashboard) ========== -->
+    <!-- Dashboard (battery + notifications) -->
     <div class="dashboard">
 
-      <!-- البطارية -->
       <section id="battery-card" class="card">
         <h3>Battery</h3>
         <div id="batteryWrapper">
@@ -101,7 +189,6 @@
         </div>
       </section>
 
-      <!-- الإشعارات -->
       <section id="notif-card" class="card">
         <h3>Notifications</h3>
         <ul id="notifList"></ul>
@@ -111,7 +198,6 @@
       </section>
 
     </div>
-    <!-- ========== END ADD ========== -->
 
     <h3>Blind Person's Location</h3>
     <div id="map" style="width:100%;height:500px"></div>
@@ -126,120 +212,85 @@
 
   </div>
 
-  <!-- سكربت الخريطة + GPS كما هو -->
+  <!-- Mapbox + periodic GPS fetch -->
   <script>
-    const ESP32_IP="192.168.4.1";
-    const ESP32_GPS_ENDPOINT=`http://${ESP32_IP}/`;
-    mapboxgl.accessToken='pk.eyJ1IjoiYWhtZWQxNzE3IiwiYSI6ImNtOXEwOW81ajFnNGwybnF1aG4zcjU5OWEifQ.upl_DmMfS1tHBCx-3IBcnw';
+    const ESP32_IP           = '192.168.4.1';
+    const ESP32_GPS_ENDPOINT = `http://${ESP32_IP}/`;
 
-    let map,currentMarker,destinationMarker,
-        currentLocation={lat:25.3884,lng:49.5881};
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWhtZWQxNzE3IiwiYSI6ImNtOXEwOW81ajFnNGwybnF1aG4zcjU5OWEifQ.upl_DmMfS1tHBCx-3IBcnw';
 
-    function initMap(){
-      map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/streets-v11',
-                            center:[currentLocation.lng,currentLocation.lat],zoom:14});
+    let map, currentMarker, destinationMarker;
+    let currentLocation = { lat: 25.3884, lng: 49.5881 };
 
-      currentMarker=new mapboxgl.Marker({color:"#3FB1CE"})
-                    .setLngLat([currentLocation.lng,currentLocation.lat]).addTo(map);
+    function initMap() {
+      map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [currentLocation.lng, currentLocation.lat],
+        zoom: 14
+      });
 
-      destinationMarker=new mapboxgl.Marker({color:"#FF0000"}).remove();
+      currentMarker = new mapboxgl.Marker({ color: '#3FB1CE' })
+        .setLngLat([currentLocation.lng, currentLocation.lat])
+        .addTo(map);
 
-      map.on("click",e=>{
-        const {lat,lng}=e.lngLat;
-        destLatDisplay.textContent=lat.toFixed(6);
-        destLngDisplay.textContent=lng.toFixed(6);
-        destinationMarker.setLngLat([lng,lat]).addTo(map);
+      destinationMarker = new mapboxgl.Marker({ color: '#FF0000' }).remove();
+
+      map.on('click', e => {
+        const { lat, lng } = e.lngLat;
+        destLatDisplay.textContent = lat.toFixed(6);
+        destLngDisplay.textContent = lng.toFixed(6);
+        destinationMarker.setLngLat([lng, lat]).addTo(map);
       });
     }
 
-    function updateMap(){
-      currentMarker.setLngLat([currentLocation.lng,currentLocation.lat]);
-      map.flyTo({center:[currentLocation.lng,currentLocation.lat],zoom:15});
-      latDisplay.textContent=currentLocation.lat.toFixed(6);
-      lngDisplay.textContent=currentLocation.lng.toFixed(6);
-      lastUpdated.textContent=new Date().toLocaleTimeString();
+    function updateMap() {
+      currentMarker.setLngLat([currentLocation.lng, currentLocation.lat]);
+      map.flyTo({ center: [currentLocation.lng, currentLocation.lat], zoom: 15 });
+      latDisplay.textContent  = currentLocation.lat.toFixed(6);
+      lngDisplay.textContent  = currentLocation.lng.toFixed(6);
+      lastUpdated.textContent = new Date().toLocaleTimeString();
     }
 
-    function fetchGPSData(){
+    function fetchGPSData() {
       fetch(ESP32_GPS_ENDPOINT)
-        .then(r=>{if(!r.ok)throw new Error(r.statusText);return r.json();})
-        .then(d=>{
-          gpsStatus.className="connected";
-          gpsStatus.textContent="GPS Status: Connected";
+        .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+        .then(d => {
+          gpsStatus.className  = 'connected';
+          gpsStatus.textContent = 'GPS Status: Connected';
 
-          /* تحديث البطارية إذا جاءت من JSON */
-          if(d.battery!==undefined) updateBattery(d.battery);
+          if (d.battery !== undefined) window.updateBattery(d.battery);
 
-          if(d.latitude&&d.longitude){
-            currentLocation.lat=parseFloat(d.latitude);
-            currentLocation.lng=parseFloat(d.longitude);
+          if (d.latitude && d.longitude) {
+            currentLocation.lat = parseFloat(d.latitude);
+            currentLocation.lng = parseFloat(d.longitude);
             updateMap();
           }
         })
-        .catch(_=>{
-          gpsStatus.className="disconnected";
-          gpsStatus.textContent="GPS Status: Disconnected – Check ESP32";
+        .catch(() => {
+          gpsStatus.className  = 'disconnected';
+          gpsStatus.textContent = 'GPS Status: Disconnected – Check ESP32';
         })
-        .finally(()=>setTimeout(fetchGPSData,2000));
+        .finally(() => setTimeout(fetchGPSData, 2000));
     }
 
-    function readURLParams(){
-      const p=new URLSearchParams(location.search);
-      const lat=parseFloat(p.get('lat')),lon=parseFloat(p.get('lon'));
-      if(!isNaN(lat)&&!isNaN(lon)){
-        currentLocation={lat,lng:lon};
+    function readURLParams() {
+      const p   = new URLSearchParams(location.search);
+      const lat = parseFloat(p.get('lat'));
+      const lon = parseFloat(p.get('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) {
+        currentLocation = { lat, lng: lon };
         updateMap();
       }
-      /* بطارية من URL إن وُجدت */
-      const lvl=parseInt(p.get('bat'),10);
-      if(!isNaN(lvl)) updateBattery(lvl);
+      const lvl = parseInt(p.get('bat'), 10);
+      if (!isNaN(lvl)) window.updateBattery(lvl);
     }
 
-    document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('DOMContentLoaded', () => {
       initMap();
       readURLParams();
       fetchGPSData();
     });
   </script>
-
-  <!-- ========== BEGIN ADD (منطق البطارية + الإشعارات) ========== -->
-  <script>
-    /* تحديث شريط البطارية وألوانه */
-    function updateBattery(level){
-      batteryFill.style.width=level+'%';
-      batteryPercent.textContent=level+' %';
-
-      battery-card.classList.remove('bat-low','bat-mid','bat-ok');
-      if(level<=15)      battery-card.classList.add('bat-low');
-      else if(level<=35) battery-card.classList.add('bat-mid');
-      else               battery-card.classList.add('bat-ok');
-
-      if(level<=20) saveNotif(`Low battery (${level} %)`, 'lowBat');
-    }
-
-    /* حفظ + رسم الإشعارات */
-    function saveNotif(msg,css=''){
-      const store=JSON.parse(localStorage.getItem('notifications')||'[]');
-      const entry={message:msg,time:Date.now(),css};
-      store.unshift(entry);
-      localStorage.setItem('notifications',JSON.stringify(store.slice(0,50)));
-      paintNotif(entry);
-    }
-    function paintNotif({message,time,css}){
-      if(!notifList) return;
-      const li=document.createElement('li');
-      li.className=css;
-      li.innerHTML=`<span class="icon">🔔</span>
-                    <span>[${new Date(time).toLocaleTimeString()}] ${message}</span>`;
-      notifList.prepend(li);
-    }
-    /* عرض آخر 5 عند التحميل */
-    if(window.notifList){
-      JSON.parse(localStorage.getItem('notifications')||'[]')
-        .slice(0,5).forEach(paintNotif);
-    }
-  </script>
-  <!-- ========== END ADD ========== -->
-
 </body>
 </html>
